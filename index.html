@@ -2,18 +2,227 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>BlindSoft</title>
+<title>BlindSoft — программы для незрячих пользователей Windows</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=109327558', 'ym');
+
+    ym(109327558, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true,
+trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/109327558" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+
+<style>
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: Canvas;
+    color: CanvasText;
+    font-size: 20px;
+    line-height: 1.6;
+  }
+
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: 34px;
+    margin: 0 0 8px 0;
+  }
+
+  h2 {
+    font-size: 28px;
+    margin-top: 34px;
+  }
+
+  h2:focus {
+    outline: 3px solid Highlight;
+    outline-offset: 6px;
+  }
+
+  nav {
+    margin: 24px 0;
+    padding: 16px 0;
+    border-top: 1px solid GrayText;
+    border-bottom: 1px solid GrayText;
+  }
+
+  a.button {
+    display: inline-block;
+    margin: 6px 10px 6px 0;
+    padding: 10px 16px;
+    border: 2px solid CanvasText;
+    border-radius: 8px;
+    color: CanvasText;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  a.button:focus,
+  a.button:hover {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+  }
+
+  section {
+    padding: 12px 0 22px 0;
+    border-bottom: 1px solid GrayText;
+  }
+
+  .download {
+    font-size: 22px;
+  }
+
+  .note {
+    border-left: 4px solid Highlight;
+    padding-left: 14px;
+  }
+
+  footer {
+    padding: 24px 0;
+    font-size: 18px;
+  }
+</style>
+
+<script>
+  function focusSection(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.focus();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('a[data-focus]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        var id = link.getAttribute('href').replace('#', '');
+        setTimeout(function () { focusSection(id); }, 0);
+      });
+    });
+  });
+</script>
 </head>
+
 <body>
-<h1>BlindSoft</h1>
-<p>BlindSoft — сайт проекта.</p>
-<p>Программы для незрячих пользователей.</p>
-<h2>TelegramWin 1</h2>
-<p>Бесплатное приложение для Windows, которое помогает незрячим пользователям работать с Telegram.</p>
-<h2>TelegramWin 2</h2>
-<p>Платная версия будет позже.</p>
-<h2>Контакты</h2>
-<p>Информация будет добавлена позже.</p>
+<main>
+
+<header>
+  <h1>BlindSoft</h1>
+  <p>Программы для незрячих пользователей Windows.</p>
+</header>
+
+<nav aria-label="Навигация по странице">
+  <a class="button" data-focus href="#telegramwin1">TelegramWin 1</a>
+  <a class="button" data-focus href="#requirements">Системные требования</a>
+  <a class="button" data-focus href="#features">Функционал</a>
+  <a class="button" data-focus href="#install">Установка</a>
+  <a class="button" data-focus href="#problems">Проблемы запуска</a>
+  <a class="button" data-focus href="#telegramwin2">TelegramWin 2</a>
+  <a class="button" data-focus href="#contacts">Связаться с разработчиком</a>
+</nav>
+
+<section>
+  <h2 id="telegramwin1" tabindex="-1">TelegramWin 1</h2>
+  <p>TelegramWin 1 — бесплатное приложение для Windows, которое помогает незрячим пользователям удобнее работать с Telegram на компьютере.</p>
+  <p class="download">
+    <a class="button" href="https://github.com/sichkaralexander/blindsoft-site/releases/download/tw1-v1.0/BlindSoft-TelegramWin1-v1.0.zip">Скачать TelegramWin 1</a>
+  </p>
+</section>
+
+<section>
+  <h2 id="requirements" tabindex="-1">Системные требования</h2>
+  <ul>
+    <li>Windows 10 или Windows 11.</li>
+    <li>64-битная система.</li>
+  </ul>
+</section>
+
+<section>
+  <h2 id="features" tabindex="-1">Функционал TelegramWin 1</h2>
+  <ol>
+    <li>Открывает Telegram на компьютере.</li>
+    <li>Показывает список чатов.</li>
+    <li>Чаты можно закреплять.</li>
+    <li>У чатов можно отключать звук уведомлений.</li>
+    <li>Enter на чате открывает окно сообщений выбранного чата.</li>
+    <li>В окне сообщений можно перемещаться по сообщениям стрелками.</li>
+    <li>Enter на сообщении открывает сообщение в полном формате. Это особенно полезно для пользователей JAWS.</li>
+    <li>Esc закрывает окно редактора и возвращает в окно сообщений.</li>
+    <li>В окне сообщений можно открыть меню через контекстное меню или Shift+F10.</li>
+    <li>Через меню можно написать сообщение, ответить на сообщение или удалить сообщение.</li>
+  </ol>
+  <p>Это текущий функционал бесплатной версии TelegramWin 1.</p>
+</section>
+
+<section>
+  <h2 id="install" tabindex="-1">Установка</h2>
+  <ol>
+    <li>Распакуйте архив TelegramWin 1 в папку.</li>
+    <li>Запустите файл TelegramWin1.exe.</li>
+  </ol>
+  <p>Приложение не нужно устанавливать в систему. Оно запускается из папки.</p>
+</section>
+
+<section>
+  <h2 id="problems" tabindex="-1">Возможные проблемы при запуске</h2>
+  <p>Если программа не запускается, возможно, на компьютере установлена старая версия Microsoft Visual C++ Redistributable.</p>
+  <p>Что сделать:</p>
+  <ol>
+    <li>Откройте папку TelegramWin 1.</li>
+    <li>Запустите файл vc_redist.x64.exe.</li>
+    <li>Дождитесь завершения установки.</li>
+    <li>После установки снова запустите TelegramWin1.exe.</li>
+  </ol>
+</section>
+
+<section>
+  <h2 id="telegramwin2" tabindex="-1">TelegramWin 2 — платная версия</h2>
+  <p>TelegramWin 2 находится в разработке. Это будет расширенная платная версия с дополнительными возможностями.</p>
+  <p>Планируемые возможности:</p>
+  <ul>
+    <li>просмотр реакций на посты и сообщения;</li>
+    <li>возможность ставить реакции;</li>
+    <li>чтение комментариев;</li>
+    <li>написание комментариев;</li>
+    <li>предупреждение JAWS о длинном посте;</li>
+    <li>быстрое открытие длинного поста через Enter для чтения целиком;</li>
+    <li>скачивание фото и видео;</li>
+    <li>переход по ссылкам из сообщений;</li>
+    <li>копирование текста сообщения;</li>
+    <li>добавление до трёх профилей в настройках;</li>
+    <li>переключение между профилями;</li>
+    <li>изменение звука входящих сообщений;</li>
+    <li>постепенное добавление новых возможностей.</li>
+  </ul>
+</section>
+
+<section>
+  <h2 id="contacts" tabindex="-1">Связаться с разработчиком</h2>
+  <p>Если у вас есть вопрос, ошибка или предложение, напишите в Telegram-группу BlindSoft.</p>
+  <p>
+    <a class="button" href="https://t.me/blindsoft">Открыть Telegram-группу BlindSoft</a>
+  </p>
+</section>
+
+<footer>
+  <p>BlindSoft. Официальный сайт проекта.</p>
+</footer>
+
+</main>
 </body>
 </html>
