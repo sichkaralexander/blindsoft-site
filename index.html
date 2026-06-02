@@ -116,6 +116,29 @@ async function createOrder() {
             "buy-result"
         );
 
+if (!name.trim()) {
+
+    result.textContent =
+        "Введите имя.";
+
+    return;
+}
+
+if (!email.trim()) {
+
+    result.textContent =
+        "Введите email.";
+
+    return;
+}
+
+if (!email.includes("@")) {
+
+    result.textContent =
+        "Введите корректный email.";
+
+    return;
+}
     result.textContent =
         "Создание заказа...";
 
