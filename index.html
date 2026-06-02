@@ -98,6 +98,77 @@ trackLinks:true});
     font-size: 18px;
   }
 </style>
+<script>
+async function createOrder() {
+
+    const name =
+        document.getElementById(
+            "buyer-name"
+        ).value;
+
+    const email =
+        document.getElementById(
+            "buyer-email"
+        ).value;
+
+    const result =
+        document.getElementById(
+            "buy-result"
+        );
+
+    result.textContent =
+        "Создание заказа...";
+
+    try {
+
+        const response =
+            await fetch(
+                "https://api.blindsoft.ru/api/create-order",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (data.ok) {
+
+            result.textContent =
+                "Заказ создан. Номер заказа: " +
+                data.order_number;
+
+            document.getElementById(
+                "buyer-name"
+            ).value = "";
+
+            document.getElementById(
+                "buyer-email"
+            ).value = "";
+
+        } else {
+
+            result.textContent =
+                "Ошибка создания заказа.";
+
+        }
+
+    } catch {
+
+        result.textContent =
+            "Ошибка соединения с сервером.";
+
+    }
+}
+</script>
 
 </head>
 
@@ -193,7 +264,9 @@ trackLinks:true});
   </p>
 
   <p>
-    <button id="buy-button">
+    <button
+    id="buy-button"
+    onclick="createOrder()">
       Купить TelegramWin 2
     </button>
   </p>
