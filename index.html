@@ -121,19 +121,22 @@ function getProductsArray(data) {
 
 function formatProductPrice(product) {
 
+    const price =
+        Number(product.price);
+
+    if (price === 0) {
+
+        return "Бесплатно";
+    }
+
+    if (price > 0) {
+
+        return String(price) + " руб.";
+    }
+
     if (product.price_text) {
 
         return product.price_text;
-    }
-
-    if (product.price === 0) {
-
-        return "0";
-    }
-
-    if (product.price) {
-
-        return String(product.price);
     }
 
     return "";
