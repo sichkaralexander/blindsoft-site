@@ -62,19 +62,24 @@ trackLinks:true});
     border-bottom: 1px solid GrayText;
   }
 
-  a.button {
+  a.button,
+  button.button {
     display: inline-block;
     margin: 6px 10px 6px 0;
     padding: 10px 16px;
     border: 2px solid CanvasText;
     border-radius: 8px;
+    background: Canvas;
     color: CanvasText;
     text-decoration: none;
+    font: inherit;
     font-weight: bold;
   }
 
   a.button:focus,
-  a.button:hover {
+  a.button:hover,
+  button.button:focus,
+  button.button:hover {
     outline: 3px solid Highlight;
     outline-offset: 3px;
   }
@@ -99,98 +104,227 @@ trackLinks:true});
   }
 </style>
 <script>
-async function createOrder() {
+function getProductsArray(data) {
 
-    const name =
-        document.getElementById(
-            "buyer-name"
-        ).value;
+    if (Array.isArray(data)) {
 
-    const email =
-        document.getElementById(
-            "buyer-email"
-        ).value;
+        return data;
+    }
 
-    const result =
-        document.getElementById(
-            "buy-result"
+    if (data && Array.isArray(data.products)) {
+
+        return data.products;
+    }
+
+    return [];
+}
+
+function formatProductPrice(product) {
+
+    if (product.price_text) {
+
+        return product.price_text;
+    }
+
+    if (product.price === 0) {
+
+        return "0";
+    }
+
+    if (product.price) {
+
+        return String(product.price);
+    }
+
+    return "";
+}
+
+function appendProductDescription(container, description) {
+
+    const text =
+        description || "";
+
+    const lines =
+        text.split(/\r?\n/);
+
+    for (const line of lines) {
+
+        if (!line.trim()) {
+
+            continue;
+        }
+
+        const paragraph =
+            document.createElement("p");
+
+        paragraph.textContent =
+            line;
+
+        container.appendChild(
+            paragraph
+        );
+    }
+}
+
+function createProductElement(product) {
+
+    const section =
+        document.createElement("section");
+
+    const heading =
+        document.createElement("h2");
+
+    heading.tabIndex =
+        -1;
+
+    heading.textContent =
+        product.name || "Продукт";
+
+    section.appendChild(
+        heading
+    );
+
+    const price =
+        formatProductPrice(product);
+
+    if (price) {
+
+        const priceParagraph =
+            document.createElement("p");
+
+        priceParagraph.textContent =
+            "Цена: " + price;
+
+        section.appendChild(
+            priceParagraph
+        );
+    }
+
+    appendProductDescription(
+        section,
+        product.full_description || product.description
+    );
+
+    if (product.can_download && product.download_url) {
+
+        const paragraph =
+            document.createElement("p");
+
+        paragraph.className =
+            "download";
+
+        const link =
+            document.createElement("a");
+
+        link.className =
+            "button";
+
+        link.href =
+            product.download_url;
+
+        link.textContent =
+            product.download_button_text || "Скачать";
+
+        paragraph.appendChild(
+            link
         );
 
-if (!name.trim()) {
+        section.appendChild(
+            paragraph
+        );
+    }
 
-    result.textContent =
-        "Введите имя.";
+    if (product.can_buy) {
 
-    return;
+        const paragraph =
+            document.createElement("p");
+
+        const button =
+            document.createElement("button");
+
+        button.type =
+            "button";
+
+        button.className =
+            "button";
+
+        button.textContent =
+            product.purchase_button_text || "Купить";
+
+        button.dataset.purchaseUrl =
+            product.purchase_url || "";
+
+        paragraph.appendChild(
+            button
+        );
+
+        section.appendChild(
+            paragraph
+        );
+    }
+
+    return section;
 }
 
-if (!email.trim()) {
+async function loadProducts() {
 
-    result.textContent =
-        "Введите email.";
+    const container =
+        document.getElementById(
+            "products-list"
+        );
 
-    return;
-}
+    if (!container) {
 
-if (!email.includes("@")) {
-
-    result.textContent =
-        "Введите корректный email.";
-
-    return;
-}
-    result.textContent =
-        "Создание заказа...";
+        return;
+    }
 
     try {
 
         const response =
             await fetch(
-                "https://api.blindsoft.ru/api/create-order",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        email: email
-                    })
-                }
+                "https://api.blindsoft.ru/api/products"
             );
+
+        if (!response.ok) {
+
+            throw new Error();
+        }
 
         const data =
             await response.json();
 
-        if (data.ok) {
+        const products =
+            getProductsArray(data);
 
-            result.textContent =
-                "Заказ создан. Номер заказа: " +
-                data.order_number;
+        container.textContent =
+            "";
 
-            document.getElementById(
-                "buyer-name"
-            ).value = "";
+        if (products.length === 0) {
 
-            document.getElementById(
-                "buyer-email"
-            ).value = "";
+            container.textContent =
+                "Список продуктов пока пуст.";
 
-        } else {
+            return;
+        }
 
-            result.textContent =
-                "Ошибка создания заказа.";
+        for (const product of products) {
 
+            container.appendChild(
+                createProductElement(product)
+            );
         }
 
     } catch {
 
-        result.textContent =
-            "Ошибка соединения с сервером.";
-
+        container.textContent =
+            "Не удалось загрузить список продуктов.";
     }
 }
+
+document.addEventListener(
+    "DOMContentLoaded",
+    loadProducts
+);
 </script>
 
 </head>
@@ -203,99 +337,9 @@ if (!email.includes("@")) {
   <p>Программы для незрячих пользователей Windows.</p>
 </header>
 
-<section>
-  <h2 id="telegramwin1" tabindex="-1">TelegramWin 1</h2>
-  <p>TelegramWin 1 — бесплатное приложение для Windows, которое помогает незрячим пользователям удобнее работать с Telegram на компьютере.</p>
-  <p class="download">
-    <a class="button" href="https://github.com/sichkaralexander/blindsoft-site/releases/download/tw1-v1.0/BlindSoft-TelegramWin1-v1.0.zip">Скачать TelegramWin 1</a>
-  </p>
-</section>
-
-<section>
-  <h2 id="requirements" tabindex="-1">Системные требования</h2>
-  <ul>
-    <li>Windows 10 или Windows 11.</li>
-    <li>64-битная система.</li>
-  </ul>
-</section>
-
-<section>
-  <h2 id="features" tabindex="-1">Функционал TelegramWin 1</h2>
-  <ol>
-    <li>Открывает Telegram на компьютере.</li>
-    <li>Показывает список чатов.</li>
-    <li>Чаты можно закреплять.</li>
-    <li>У чатов можно отключать звук уведомлений.</li>
-    <li>Enter на чате открывает окно сообщений выбранного чата.</li>
-    <li>В окне сообщений можно перемещаться по сообщениям стрелками.</li>
-    <li>Enter на сообщении открывает сообщение в полном формате. Это особенно полезно для пользователей JAWS.</li>
-    <li>Esc закрывает окно редактора и возвращает в окно сообщений.</li>
-    <li>В окне сообщений можно открыть меню через контекстное меню или Shift+F10.</li>
-    <li>Через меню можно написать сообщение, ответить на сообщение или удалить сообщение.</li>
-  </ol>
-  <p>Это текущий функционал бесплатной версии TelegramWin 1.</p>
-</section>
-
-<section>
-  <h2 id="install" tabindex="-1">Установка</h2>
-  <ol>
-    <li>Распакуйте архив TelegramWin 1 в папку.</li>
-    <li>Запустите файл TelegramWin1.exe.</li>
-  </ol>
-  <p>Приложение не нужно устанавливать в систему. Оно запускается из папки.</p>
-</section>
-
-<section>
-  <h2 id="problems" tabindex="-1">Возможные проблемы при запуске</h2>
-  <p>Если программа не запускается, возможно, на компьютере установлена старая версия Microsoft Visual C++ Redistributable.</p>
-  <p>Что сделать:</p>
-  <ol>
-    <li>Откройте папку TelegramWin 1.</li>
-    <li>Запустите файл vc_redist.x64.exe.</li>
-    <li>Дождитесь завершения установки.</li>
-    <li>После установки снова запустите TelegramWin1.exe.</li>
-  </ol>
-</section>
-
-<section>
-  <h2 id="telegramwin2" tabindex="-1">TelegramWin 2 — платная версия</h2>
-  <p>TelegramWin 2 находится в разработке. Это будет расширенная платная версия с дополнительными возможностями.</p>
-  <p>Планируемые возможности:</p>
-  <ul>
-    <li>просмотр реакций на посты и сообщения;</li>
-    <li>возможность ставить реакции;</li>
-    <li>чтение комментариев;</li>
-    <li>написание комментариев;</li>
-    <li>предупреждение JAWS о длинном посте;</li>
-    <li>быстрое открытие длинного поста через Enter для чтения целиком;</li>
-    <li>скачивание фото и видео;</li>
-    <li>переход по ссылкам из сообщений;</li>
-    <li>копирование текста сообщения;</li>
-    <li>добавление до трёх профилей в настройках;</li>
-    <li>переключение между профилями;</li>
-    <li>изменение звука входящих сообщений;</li>
-    <li>постепенное добавление новых возможностей.</li>
-  </ul>
-  <p>
-    <label for="buyer-name">Имя:</label><br>
-    <input type="text" id="buyer-name" size="40">
-  </p>
-
-  <p>
-    <label for="buyer-email">Email:</label><br>
-    <input type="email" id="buyer-email" size="40">
-  </p>
-
-  <p>
-    <button
-    id="buy-button"
-    onclick="createOrder()">
-      Купить TelegramWin 2
-    </button>
-  </p>
-
-  <p id="buy-result"></p>
-</section>
+<div id="products-list" aria-live="polite">
+  Загрузка продуктов...
+</div>
 
 <section>
   <h2 id="contacts" tabindex="-1">Связаться с разработчиком</h2>
