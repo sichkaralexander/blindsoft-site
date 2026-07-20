@@ -566,7 +566,7 @@ function initializeOrderDialog() {
         try {
 
             const response =
-                await fetch("/api/create-order", {
+                await fetch("https://api.blindsoft.ru/api/create-order", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
