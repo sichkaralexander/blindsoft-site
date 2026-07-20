@@ -126,6 +126,38 @@ trackLinks:true});
     font-weight: bold;
   }
 
+  .order-field {
+    display: block;
+    margin: 16px 0;
+  }
+
+  .order-field input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 4px;
+    padding: 8px;
+    border: 2px solid CanvasText;
+    border-radius: 4px;
+    background: Field;
+    color: FieldText;
+    font: inherit;
+  }
+
+  .order-consent {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 20px 0;
+  }
+
+  .order-consent input {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    margin-top: 5px;
+  }
+
   footer {
     padding: 24px 0;
     font-size: 18px;
@@ -200,31 +232,26 @@ function appendProductDescription(container, description) {
 let purchaseDialogTrigger =
     null;
 
-let pendingPurchaseUrl =
+let pendingProduct =
     null;
 
-function getValidPurchaseUrl(value) {
+let orderRequestController =
+    null;
 
-    if (typeof value !== "string" || !value.trim()) {
+function restorePurchaseFocus() {
 
-        return null;
-    }
+    const trigger =
+        purchaseDialogTrigger;
 
-    try {
+    purchaseDialogTrigger =
+        null;
 
-        const url =
-            new URL(value);
+    pendingProduct =
+        null;
 
-        if (url.protocol !== "https:" && url.protocol !== "http:") {
+    if (trigger && trigger.isConnected) {
 
-            return null;
-        }
-
-        return url;
-
-    } catch {
-
-        return null;
+        trigger.focus();
     }
 }
 
@@ -242,14 +269,8 @@ function openPurchaseDialog(product, trigger) {
     const confirmButton =
         document.getElementById("confirm-purchase");
 
-    const cancelButton =
-        document.getElementById("cancel-purchase");
-
-    const errorMessage =
-        document.getElementById("purchase-error");
-
     if (!dialog || !productName || !productPrice ||
-        !confirmButton || !cancelButton || !errorMessage) {
+        !confirmButton) {
 
         return;
     }
@@ -257,8 +278,8 @@ function openPurchaseDialog(product, trigger) {
     purchaseDialogTrigger =
         trigger;
 
-    pendingPurchaseUrl =
-        getValidPurchaseUrl(product.purchase_url);
+    pendingProduct =
+        product;
 
     productName.textContent =
         "Название продукта: " + (product.name || "Не указано");
@@ -266,42 +287,11 @@ function openPurchaseDialog(product, trigger) {
     productPrice.textContent =
         "Цена: " + (formatProductPrice(product) || "Не указана");
 
-    if (pendingPurchaseUrl) {
-
-        errorMessage.hidden =
-            true;
-
-        errorMessage.textContent =
-            "";
-
-        confirmButton.disabled =
-            false;
-
-    } else {
-
-        errorMessage.textContent =
-            "Не удалось открыть оформление покупки: адрес оформления отсутствует или указан неправильно.";
-
-        errorMessage.hidden =
-            false;
-
-        confirmButton.disabled =
-            true;
-    }
-
     dialog.showModal();
-
-    if (confirmButton.disabled) {
-
-        cancelButton.focus();
-
-    } else {
-
-        confirmButton.focus();
-    }
+    confirmButton.focus();
 }
 
-function keepFocusInsidePurchaseDialog(event) {
+function keepFocusInsideDialog(event) {
 
     if (event.key !== "Tab") {
 
@@ -313,7 +303,9 @@ function keepFocusInsidePurchaseDialog(event) {
 
     const focusableElements =
         Array.from(
-            dialog.querySelectorAll("button:not([disabled])")
+            dialog.querySelectorAll(
+                "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex=\"-1\"])"
+            )
         );
 
     if (focusableElements.length === 0) {
@@ -345,6 +337,130 @@ function keepFocusInsidePurchaseDialog(event) {
     }
 }
 
+function openOrderDialog() {
+
+    const dialog =
+        document.getElementById("order-dialog");
+
+    const form =
+        document.getElementById("order-form");
+
+    const productName =
+        document.getElementById("order-product-name");
+
+    const productPrice =
+        document.getElementById("order-product-price");
+
+    const nameInput =
+        document.getElementById("order-name");
+
+    const errorMessage =
+        document.getElementById("order-error");
+
+    if (!dialog || !form || !productName || !productPrice ||
+        !nameInput || !errorMessage || !pendingProduct) {
+
+        restorePurchaseFocus();
+        return;
+    }
+
+    form.reset();
+
+    productName.value =
+        pendingProduct.name || "Не указано";
+
+    productPrice.value =
+        formatProductPrice(pendingProduct) || "Не указана";
+
+    errorMessage.hidden =
+        true;
+
+    errorMessage.textContent =
+        "";
+
+    dialog.showModal();
+    nameInput.focus();
+}
+
+function showOrderError(message, focusTarget) {
+
+    const errorMessage =
+        document.getElementById("order-error");
+
+    if (!errorMessage) {
+
+        return;
+    }
+
+    errorMessage.textContent =
+        message;
+
+    errorMessage.hidden =
+        false;
+
+    if (focusTarget) {
+
+        focusTarget.focus();
+
+    } else {
+
+        errorMessage.focus();
+    }
+}
+
+async function getOrderErrorText(response) {
+
+    const responseText =
+        await response.text();
+
+    if (responseText) {
+
+        try {
+
+            const data =
+                JSON.parse(responseText);
+
+            const message =
+                typeof data === "string"
+                    ? data
+                    : data.error || data.message || data.detail;
+
+            if (message) {
+
+                return typeof message === "object"
+                    ? JSON.stringify(message)
+                    : String(message);
+            }
+
+            return responseText;
+
+        } catch {
+
+            return responseText;
+        }
+    }
+
+    return "Ошибка сервера (" + String(response.status) + ").";
+}
+
+function openOrderSuccessDialog() {
+
+    const dialog =
+        document.getElementById("order-success-dialog");
+
+    const closeButton =
+        document.getElementById("close-order-success");
+
+    if (!dialog || !closeButton) {
+
+        restorePurchaseFocus();
+        return;
+    }
+
+    dialog.showModal();
+    closeButton.focus();
+}
+
 function initializePurchaseDialog() {
 
     const dialog =
@@ -363,12 +479,13 @@ function initializePurchaseDialog() {
 
     confirmButton.addEventListener("click", function() {
 
-        if (!pendingPurchaseUrl) {
+        if (!pendingProduct) {
 
             return;
         }
 
-        window.location.assign(pendingPurchaseUrl.href);
+        dialog.close("continue");
+        openOrderDialog();
     });
 
     cancelButton.addEventListener("click", function() {
@@ -382,24 +499,175 @@ function initializePurchaseDialog() {
         dialog.close("cancel");
     });
 
-    dialog.addEventListener("keydown", keepFocusInsidePurchaseDialog);
+    dialog.addEventListener("keydown", keepFocusInsideDialog);
 
     dialog.addEventListener("close", function() {
 
-        const trigger =
-            purchaseDialogTrigger;
+        if (dialog.returnValue !== "continue") {
 
-        purchaseDialogTrigger =
-            null;
-
-        pendingPurchaseUrl =
-            null;
-
-        if (trigger && trigger.isConnected) {
-
-            trigger.focus();
+            restorePurchaseFocus();
         }
     });
+}
+
+function initializeOrderDialog() {
+
+    const dialog =
+        document.getElementById("order-dialog");
+
+    const form =
+        document.getElementById("order-form");
+
+    const consent =
+        document.getElementById("personal-data-consent");
+
+    const submitButton =
+        document.getElementById("submit-order");
+
+    const cancelButton =
+        document.getElementById("cancel-order");
+
+    if (!dialog || !form || !consent || !submitButton || !cancelButton) {
+
+        return;
+    }
+
+    form.addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        if (!consent.checked) {
+
+            showOrderError(
+                "Необходимо согласиться на обработку персональных данных.",
+                consent
+            );
+
+            return;
+        }
+
+        if (!form.reportValidity() || !pendingProduct) {
+
+            return;
+        }
+
+        const nameInput =
+            document.getElementById("order-name");
+
+        const emailInput =
+            document.getElementById("order-email");
+
+        orderRequestController =
+            new AbortController();
+
+        submitButton.disabled =
+            true;
+
+        try {
+
+            const response =
+                await fetch("/api/create-order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        product_id: pendingProduct.id,
+                        name: nameInput.value.trim(),
+                        email: emailInput.value.trim(),
+                        personal_data_consent: true
+                    }),
+                    signal: orderRequestController.signal
+                });
+
+            if (!response.ok) {
+
+                showOrderError(
+                    await getOrderErrorText(response)
+                );
+
+                return;
+            }
+
+            orderRequestController =
+                null;
+
+            dialog.close("success");
+            openOrderSuccessDialog();
+
+        } catch (error) {
+
+            if (error.name !== "AbortError") {
+
+                showOrderError(
+                    "Не удалось отправить заказ. Проверьте подключение к интернету и повторите попытку."
+                );
+            }
+
+        } finally {
+
+            submitButton.disabled =
+                false;
+
+            orderRequestController =
+                null;
+        }
+    });
+
+    cancelButton.addEventListener("click", function() {
+
+        dialog.close("cancel");
+    });
+
+    dialog.addEventListener("cancel", function(event) {
+
+        event.preventDefault();
+        dialog.close("cancel");
+    });
+
+    dialog.addEventListener("keydown", keepFocusInsideDialog);
+
+    dialog.addEventListener("close", function() {
+
+        if (orderRequestController) {
+
+            orderRequestController.abort();
+            orderRequestController = null;
+        }
+
+        if (dialog.returnValue !== "success") {
+
+            restorePurchaseFocus();
+        }
+    });
+}
+
+function initializeOrderSuccessDialog() {
+
+    const dialog =
+        document.getElementById("order-success-dialog");
+
+    const closeButton =
+        document.getElementById("close-order-success");
+
+    if (!dialog || !closeButton) {
+
+        return;
+    }
+
+    closeButton.addEventListener("click", function() {
+
+        dialog.close();
+    });
+
+    dialog.addEventListener("cancel", function(event) {
+
+        event.preventDefault();
+        dialog.close();
+    });
+
+    dialog.addEventListener("keydown", keepFocusInsideDialog);
+    dialog.addEventListener("close", restorePurchaseFocus);
 }
 
 function createProductElement(product) {
@@ -487,9 +755,6 @@ function createProductElement(product) {
         button.textContent =
             product.purchase_button_text || "Купить";
 
-        button.dataset.purchaseUrl =
-            product.purchase_url || "";
-
         button.addEventListener("click", function() {
 
             openPurchaseDialog(product, button);
@@ -567,6 +832,8 @@ document.addEventListener(
     function() {
 
         initializePurchaseDialog();
+        initializeOrderDialog();
+        initializeOrderSuccessDialog();
         loadProducts();
     }
 );
@@ -588,14 +855,55 @@ document.addEventListener(
 
 <dialog id="purchase-dialog"
         aria-labelledby="purchase-dialog-title"
-        aria-describedby="purchase-product-name purchase-product-price purchase-error">
+        aria-describedby="purchase-product-name purchase-product-price">
   <h2 id="purchase-dialog-title">Подтверждение покупки</h2>
   <p id="purchase-product-name"></p>
   <p id="purchase-product-price"></p>
-  <p id="purchase-error" class="dialog-error" role="alert" hidden></p>
   <p class="dialog-actions">
     <button id="confirm-purchase" class="button" type="button">Подтвердить покупку</button>
     <button id="cancel-purchase" class="button" type="button">Отмена</button>
+  </p>
+</dialog>
+
+<dialog id="order-dialog"
+        aria-labelledby="order-dialog-title">
+  <h2 id="order-dialog-title">Оформление заказа</h2>
+  <form id="order-form">
+    <label class="order-field" for="order-product-name">
+      Название продукта
+      <input id="order-product-name" type="text" readonly>
+    </label>
+    <label class="order-field" for="order-product-price">
+      Цена
+      <input id="order-product-price" type="text" readonly>
+    </label>
+    <label class="order-field" for="order-name">
+      Имя
+      <input id="order-name" name="name" type="text" autocomplete="name" required>
+    </label>
+    <label class="order-field" for="order-email">
+      Электронная почта
+      <input id="order-email" name="email" type="email" autocomplete="email" required>
+    </label>
+    <label class="order-consent" for="personal-data-consent">
+      <input id="personal-data-consent" name="personal_data_consent" type="checkbox">
+      <span>Я согласен на обработку персональных данных.</span>
+    </label>
+    <p id="order-error" class="dialog-error" role="alert" tabindex="-1" hidden></p>
+    <p class="dialog-actions">
+      <button id="submit-order" class="button" type="submit">Получить лицензионный ключ</button>
+      <button id="cancel-order" class="button" type="button">Отмена</button>
+    </p>
+  </form>
+</dialog>
+
+<dialog id="order-success-dialog"
+        aria-labelledby="order-success-title"
+        aria-describedby="order-success-message">
+  <h2 id="order-success-title">Спасибо!</h2>
+  <p id="order-success-message">Лицензионный ключ отправлен на указанный адрес электронной почты.</p>
+  <p class="dialog-actions">
+    <button id="close-order-success" class="button" type="button">Закрыть</button>
   </p>
 </dialog>
 
