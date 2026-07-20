@@ -98,6 +98,34 @@ trackLinks:true});
     padding-left: 14px;
   }
 
+  dialog {
+    width: min(90%, 620px);
+    box-sizing: border-box;
+    padding: 24px;
+    border: 2px solid CanvasText;
+    border-radius: 8px;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  dialog::backdrop {
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  dialog h2 {
+    margin-top: 0;
+  }
+
+  .dialog-actions {
+    margin-bottom: 0;
+  }
+
+  .dialog-error {
+    border-left: 4px solid Highlight;
+    padding-left: 14px;
+    font-weight: bold;
+  }
+
   footer {
     padding: 24px 0;
     font-size: 18px;
@@ -167,6 +195,211 @@ function appendProductDescription(container, description) {
             paragraph
         );
     }
+}
+
+let purchaseDialogTrigger =
+    null;
+
+let pendingPurchaseUrl =
+    null;
+
+function getValidPurchaseUrl(value) {
+
+    if (typeof value !== "string" || !value.trim()) {
+
+        return null;
+    }
+
+    try {
+
+        const url =
+            new URL(value);
+
+        if (url.protocol !== "https:" && url.protocol !== "http:") {
+
+            return null;
+        }
+
+        return url;
+
+    } catch {
+
+        return null;
+    }
+}
+
+function openPurchaseDialog(product, trigger) {
+
+    const dialog =
+        document.getElementById("purchase-dialog");
+
+    const productName =
+        document.getElementById("purchase-product-name");
+
+    const productPrice =
+        document.getElementById("purchase-product-price");
+
+    const confirmButton =
+        document.getElementById("confirm-purchase");
+
+    const cancelButton =
+        document.getElementById("cancel-purchase");
+
+    const errorMessage =
+        document.getElementById("purchase-error");
+
+    if (!dialog || !productName || !productPrice ||
+        !confirmButton || !cancelButton || !errorMessage) {
+
+        return;
+    }
+
+    purchaseDialogTrigger =
+        trigger;
+
+    pendingPurchaseUrl =
+        getValidPurchaseUrl(product.purchase_url);
+
+    productName.textContent =
+        "Название продукта: " + (product.name || "Не указано");
+
+    productPrice.textContent =
+        "Цена: " + (formatProductPrice(product) || "Не указана");
+
+    if (pendingPurchaseUrl) {
+
+        errorMessage.hidden =
+            true;
+
+        errorMessage.textContent =
+            "";
+
+        confirmButton.disabled =
+            false;
+
+    } else {
+
+        errorMessage.textContent =
+            "Не удалось открыть оформление покупки: адрес оформления отсутствует или указан неправильно.";
+
+        errorMessage.hidden =
+            false;
+
+        confirmButton.disabled =
+            true;
+    }
+
+    dialog.showModal();
+
+    if (confirmButton.disabled) {
+
+        cancelButton.focus();
+
+    } else {
+
+        confirmButton.focus();
+    }
+}
+
+function keepFocusInsidePurchaseDialog(event) {
+
+    if (event.key !== "Tab") {
+
+        return;
+    }
+
+    const dialog =
+        event.currentTarget;
+
+    const focusableElements =
+        Array.from(
+            dialog.querySelectorAll("button:not([disabled])")
+        );
+
+    if (focusableElements.length === 0) {
+
+        event.preventDefault();
+        return;
+    }
+
+    const firstElement =
+        focusableElements[0];
+
+    const lastElement =
+        focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+
+        event.preventDefault();
+        lastElement.focus();
+
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+
+        event.preventDefault();
+        firstElement.focus();
+
+    } else if (!dialog.contains(document.activeElement)) {
+
+        event.preventDefault();
+        firstElement.focus();
+    }
+}
+
+function initializePurchaseDialog() {
+
+    const dialog =
+        document.getElementById("purchase-dialog");
+
+    const confirmButton =
+        document.getElementById("confirm-purchase");
+
+    const cancelButton =
+        document.getElementById("cancel-purchase");
+
+    if (!dialog || !confirmButton || !cancelButton) {
+
+        return;
+    }
+
+    confirmButton.addEventListener("click", function() {
+
+        if (!pendingPurchaseUrl) {
+
+            return;
+        }
+
+        window.location.assign(pendingPurchaseUrl.href);
+    });
+
+    cancelButton.addEventListener("click", function() {
+
+        dialog.close("cancel");
+    });
+
+    dialog.addEventListener("cancel", function(event) {
+
+        event.preventDefault();
+        dialog.close("cancel");
+    });
+
+    dialog.addEventListener("keydown", keepFocusInsidePurchaseDialog);
+
+    dialog.addEventListener("close", function() {
+
+        const trigger =
+            purchaseDialogTrigger;
+
+        purchaseDialogTrigger =
+            null;
+
+        pendingPurchaseUrl =
+            null;
+
+        if (trigger && trigger.isConnected) {
+
+            trigger.focus();
+        }
+    });
 }
 
 function createProductElement(product) {
@@ -257,6 +490,11 @@ function createProductElement(product) {
         button.dataset.purchaseUrl =
             product.purchase_url || "";
 
+        button.addEventListener("click", function() {
+
+            openPurchaseDialog(product, button);
+        });
+
         paragraph.appendChild(
             button
         );
@@ -326,7 +564,11 @@ async function loadProducts() {
 
 document.addEventListener(
     "DOMContentLoaded",
-    loadProducts
+    function() {
+
+        initializePurchaseDialog();
+        loadProducts();
+    }
 );
 </script>
 
@@ -344,11 +586,29 @@ document.addEventListener(
   Загрузка продуктов...
 </div>
 
+<dialog id="purchase-dialog"
+        aria-labelledby="purchase-dialog-title"
+        aria-describedby="purchase-product-name purchase-product-price purchase-error">
+  <h2 id="purchase-dialog-title">Подтверждение покупки</h2>
+  <p id="purchase-product-name"></p>
+  <p id="purchase-product-price"></p>
+  <p id="purchase-error" class="dialog-error" role="alert" hidden></p>
+  <p class="dialog-actions">
+    <button id="confirm-purchase" class="button" type="button">Подтвердить покупку</button>
+    <button id="cancel-purchase" class="button" type="button">Отмена</button>
+  </p>
+</dialog>
+
 <section>
   <h2 id="contacts" tabindex="-1">Связаться с разработчиком</h2>
   <p>Если у вас есть вопрос, ошибка или предложение, напишите в Telegram-группу BlindSoft.</p>
   <p>
     <a class="button" href="https://t.me/blindsoft">Открыть Telegram-группу BlindSoft</a>
+  </p>
+  <p>
+    Электронная почта:
+    <a href="mailto:blindsoft2@yandex.ru?subject=Обратная%20связь%20BlindSoft"
+       aria-label="Написать разработчику">blindsoft2@yandex.ru</a>
   </p>
 </section>
 
