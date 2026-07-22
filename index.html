@@ -620,11 +620,54 @@ function initializeOrderDialog() {
                 return;
             }
 
+            let data;
+
+            try {
+
+                data =
+                    await response.json();
+
+            } catch {
+
+                showOrderError(
+                    "Не удалось получить ссылку на оплату. Попробуйте ещё раз."
+                );
+
+                return;
+            }
+
+            const confirmationUrl =
+                data && typeof data.confirmation_url === "string"
+                    ? data.confirmation_url.trim()
+                    : "";
+
+            let paymentUrl;
+
+            try {
+
+                paymentUrl =
+                    new URL(confirmationUrl);
+
+            } catch {
+
+                paymentUrl =
+                    null;
+            }
+
+            if (!paymentUrl || paymentUrl.protocol !== "https:") {
+
+                showOrderError(
+                    "Не удалось получить ссылку на оплату. Попробуйте ещё раз."
+                );
+
+                return;
+            }
+
             orderRequestController =
                 null;
 
-            dialog.close("success");
-            openOrderSuccessDialog();
+            window.location.href =
+                confirmationUrl;
 
         } catch (error) {
 
