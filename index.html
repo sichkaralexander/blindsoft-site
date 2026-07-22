@@ -745,6 +745,58 @@ function initializeOrderSuccessDialog() {
     dialog.addEventListener("close", restorePurchaseFocus);
 }
 
+function initializePaymentReturnDialog() {
+
+    const parameters =
+        new URLSearchParams(window.location.search);
+
+    if (!parameters.getAll("payment").includes("return")) {
+
+        return;
+    }
+
+    const dialog =
+        document.getElementById("payment-return-dialog");
+
+    const title =
+        document.getElementById("payment-return-title");
+
+    const closeButton =
+        document.getElementById("close-payment-return");
+
+    if (!dialog || !title || !closeButton) {
+
+        return;
+    }
+
+    const currentUrl =
+        new URL(window.location.href);
+
+    currentUrl.searchParams.delete("payment", "return");
+
+    window.history.replaceState(
+        null,
+        "",
+        currentUrl.href
+    );
+
+    closeButton.addEventListener("click", function() {
+
+        dialog.close();
+    });
+
+    dialog.addEventListener("cancel", function(event) {
+
+        event.preventDefault();
+        dialog.close();
+    });
+
+    dialog.addEventListener("keydown", keepFocusInsideDialog);
+
+    dialog.showModal();
+    title.focus();
+}
+
 function initializePageSectionLinks() {
 
     const links =
@@ -962,6 +1014,7 @@ document.addEventListener(
         initializePurchaseDialog();
         initializeOrderDialog();
         initializeOrderSuccessDialog();
+        initializePaymentReturnDialog();
         initializePageSectionLinks();
         loadProducts();
     }
@@ -1040,6 +1093,22 @@ document.addEventListener(
   <p id="order-success-message">Лицензионный ключ отправлен на указанный адрес электронной почты.</p>
   <p class="dialog-actions">
     <button id="close-order-success" class="button" type="button">Закрыть</button>
+  </p>
+</dialog>
+
+<dialog id="payment-return-dialog"
+        aria-labelledby="payment-return-title"
+        aria-describedby="payment-return-message">
+  <h2 id="payment-return-title" tabindex="-1">Спасибо за покупку!</h2>
+  <div id="payment-return-message">
+    <p>Ваш заказ принят в обработку. Лицензионный ключ будет отправлен на электронную почту, указанную при оформлении заказа.</p>
+    <p>Обычно письмо приходит в течение нескольких секунд.</p>
+    <p>Если вы не нашли письмо, обязательно проверьте папки «Входящие» и «Спам».</p>
+    <p>Для адресов Gmail доставка писем иногда происходит с задержкой.</p>
+    <p>Если письмо не пришло в течение 10 минут, напишите нам: <a href="mailto:blindsoft2@yandex.ru">blindsoft2@yandex.ru</a>.</p>
+  </div>
+  <p class="dialog-actions">
+    <button id="close-payment-return" class="button" type="button">Закрыть</button>
   </p>
 </dialog>
 
